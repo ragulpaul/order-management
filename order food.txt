@@ -1,0 +1,272 @@
+index.html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Order Management (Linked List)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <h1>🍕 Food Order Management System</h1>
+
+    <div class="container">
+        <div class="menu">
+            <h2>Menu</h2>
+            <ul id="menuList">
+                <!-- Menu items will load here -->
+            </ul>
+        </div>
+
+        <div class="order">
+            <h2>Place an Order</h2>
+            <select id="foodSelect"></select>
+            <input type="number" id="quantity" placeholder="Quantity" min="1" value="1">
+            <button onclick="placeOrder()">Place Order</button>
+        </div>
+
+        <div class="current-orders">
+            <h2>Current Orders</h2>
+            <table id="orderTable">
+                <thead>
+                    <tr>
+                        <th>Food</th>
+                        <th>Quantity</th>
+                        <th>Total (Rs)</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Orders will be listed here -->
+                </tbody>
+            </table>
+            <h3 id="totalBill">Total Bill: Rs. 0</h3>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+ style.css
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+    margin: 20px;
+}
+
+h1 {
+    text-align: center;
+    color: #343a40;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+}
+
+.menu, .order, .current-orders {
+    margin-bottom: 30px;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    padding: 8px 0;
+}
+
+input, select, button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    font-size: 16px;
+}
+
+button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    margin-top: 10px;
+}
+
+button:hover {
+    background-color: #218838;
+    cursor: pointer;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th, td {
+    border: 1px solid #dee2e6;
+    padding: 12px;
+    text-align: center;
+}
+
+th {
+    background-color: #343a40;
+    color: white;
+}
+
+.delete-btn {
+    background-color: #dc3545;
+}
+
+.delete-btn:hover {
+    background-color: #c82333;
+}
+script.js
+// Menu items
+const menu = [
+    { id: 1, name: "Burger", price: 120 },
+    { id: 2, name: "Pizza", price: 250 },
+    { id: 3, name: "Fries", price: 80 },
+    { id: 4, name: "Pasta", price: 180 },
+    { id: 5, name: "Sandwich", price: 90 }
+];
+
+// Node class for Linked List
+class OrderNode {
+    constructor(foodName, quantity, price) {
+        this.foodName = foodName;
+        this.quantity = quantity;
+        this.price = price;
+        this.next = null;
+    }
+}
+
+// Linked List class
+class OrderList {
+    constructor() {
+        this.head = null;
+    }
+
+    // Add new order
+    addOrder(foodName, quantity, price) {
+        const newNode = new OrderNode(foodName, quantity, price);
+        if (!this.head) {
+            this.head = newNode;
+        } else {
+            let current = this.head;
+            while (current.next !== null) {
+                current = current.next;
+            }
+            current.next = newNode;
+        }
+    }
+
+    // Delete order by index
+    deleteOrder(index) {
+        if (index === 0) {
+            this.head = this.head.next;
+            return;
+        }
+        let current = this.head;
+        let prev = null;
+        let i = 0;
+        while (current !== null && i < index) {
+            prev = current;
+            current = current.next;
+            i++;
+        }
+        if (current !== null) {
+            prev.next = current.next;
+        }
+    }
+
+    // Get all orders as an array
+    getOrders() {
+        let orders = [];
+        let current = this.head;
+        while (current !== null) {
+            orders.push(current);
+            current = current.next;
+        }
+        return orders;
+    }
+
+    // Calculate total bill
+    getTotalBill() {
+        let total = 0;
+        let current = this.head;
+        while (current !== null) {
+            total += current.price * current.quantity;
+            current = current.next;
+        }
+        return total;
+    }
+}
+
+// Create new order list
+const orderList = new OrderList();
+
+// Load Menu on Page
+function loadMenu() {
+    const menuList = document.getElementById("menuList");
+    const foodSelect = document.getElementById("foodSelect");
+
+    menu.forEach(item => {
+        const li = document.createElement("li");
+        li.textContent = `${item.name} - Rs. ${item.price}`;
+        menuList.appendChild(li);
+
+        const option = document.createElement("option");
+        option.value = item.id;
+        option.textContent = `${item.name} - Rs. ${item.price}`;
+        foodSelect.appendChild(option);
+    });
+}
+
+// Place an Order
+function placeOrder() {
+    const foodId = parseInt(document.getElementById("foodSelect").value);
+    const quantity = parseInt(document.getElementById("quantity").value);
+
+    if (quantity <= 0) {
+        alert("Enter valid quantity!");
+        return;
+    }
+
+    const foodItem = menu.find(item => item.id === foodId);
+
+    orderList.addOrder(foodItem.name, quantity, foodItem.price);
+    displayOrders();
+}
+
+// Display Orders
+function displayOrders() {
+    const orderTable = document.getElementById("orderTable").querySelector("tbody");
+    orderTable.innerHTML = "";
+
+    const orders = orderList.getOrders();
+    orders.forEach((order, index) => {
+        const row = `<tr>
+                        <td>${order.foodName}</td>
+                        <td>${order.quantity}</td>
+                        <td>Rs. ${(order.price * order.quantity).toFixed(2)}</td>
+                        <td><button class="delete-btn" onclick="deleteOrder(${index})">Delete</button></td>
+                     </tr>`;
+        orderTable.innerHTML += row;
+    });
+
+    document.getElementById("totalBill").textContent = `Total Bill: Rs. ${orderList.getTotalBill().toFixed(2)}`;
+}
+
+// Delete an Order
+function deleteOrder(index) {
+    orderList.deleteOrder(index);
+    displayOrders();
+}
+
+// Initialize
+loadMenu();
